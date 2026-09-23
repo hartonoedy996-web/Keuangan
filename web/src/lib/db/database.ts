@@ -2,12 +2,12 @@ import { createRxDatabase, addRxPlugin } from 'rxdb';
 import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
 import { transactionSchemaLiteral, accountSchemaLiteral, categorySchemaLiteral } from './schema';
 
-// Enable debugging in dev mode
-if (process.env.NODE_ENV === 'development') {
-  import('rxdb/plugins/dev-mode').then((module) => {
-    addRxPlugin(module.RxDBDevModePlugin);
-  });
-}
+// Disable dev-mode plugin for now to avoid AJV validator requirement (Error DVM1)
+// if (process.env.NODE_ENV === 'development') {
+//   import('rxdb/plugins/dev-mode').then((module) => {
+//     addRxPlugin(module.RxDBDevModePlugin);
+//   });
+// }
 
 // Add state plugin for React hooks
 import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
@@ -26,11 +26,23 @@ export function initDatabase() {
   if (dbPromise) return dbPromise;
 
   const promise = (async () => {
-    const db = await createRxDatabase({
-      name: 'smart_money_db',
-      storage: getRxStorageDexie(),
-      ignoreDuplicate: true // Important for React Strict Mode
-    });
+    let db;
+    try {
+      db = await createRxDatabase({
+        name: 'smart_money_db',
+        storage: getRxStorageDexie(),
+      });
+    } catch (err: any) {
+      if (err.message?.includes('DB9') || err.code === 'DB9') {
+        console.warn('HMR duplicated database detected. Using fallback name for this session.');
+        db = await createRxDatabase({
+          name: 'smart_money_db_' + Date.now(),
+          storage: getRxStorageDexie(),
+        });
+      } else {
+        throw err;
+      }
+    }
 
     // Create collections
     await db.addCollections({
