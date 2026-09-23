@@ -16,9 +16,16 @@ addRxPlugin(RxDBUpdatePlugin);
 let dbPromise: Promise<any> | null = null;
 
 export function initDatabase() {
+  // Gunakan objek window untuk menyimpan instance selama Fast Refresh di Next.js
+  const globalAny: any = typeof window !== 'undefined' ? window : global;
+  
+  if (globalAny.__rxdbPromise) {
+    return globalAny.__rxdbPromise;
+  }
+
   if (dbPromise) return dbPromise;
 
-  dbPromise = (async () => {
+  const promise = (async () => {
     const db = await createRxDatabase({
       name: 'smart_money_db',
       storage: getRxStorageDexie(),
@@ -41,5 +48,8 @@ export function initDatabase() {
     return db;
   })();
 
-  return dbPromise;
+  dbPromise = promise;
+  globalAny.__rxdbPromise = promise;
+  
+  return promise;
 }

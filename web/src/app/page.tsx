@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useDatabase } from '@/providers/DatabaseProvider';
 import { transactionDocType } from '@/lib/db/schema';
+import { syncTransactions } from '@/lib/db/sync';
 import BalanceCard from '@/components/BalanceCard';
 import CategoryProgressBar from '@/components/CategoryProgressBar';
 import SavingsGoalCard from '@/components/SavingsGoalCard';
@@ -10,6 +11,7 @@ export default function Dashboard() {
   const db = useDatabase();
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpense, setTotalExpense] = useState(0);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     if (!db) return;
@@ -31,6 +33,19 @@ export default function Dashboard() {
 
   const activeBalance = totalIncome - totalExpense;
 
+  const handleSync = async () => {
+    if (!db) return;
+    setIsSyncing(true);
+    const result = await syncTransactions(db);
+    setIsSyncing(false);
+    
+    if (result.success) {
+      alert('Sync Berhasil!');
+    } else {
+      alert('Sync Gagal: ' + result.error + '\n(Tabel Supabase belum dibuat di backend)');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-cream-bg dark:bg-forest-bg p-4 md:p-8">
       <header className="mb-8 flex justify-between items-center">
@@ -39,8 +54,12 @@ export default function Dashboard() {
           <p className="text-cream-textSecondary dark:text-forest-textSecondary text-sm mt-1">Ringkasan kondisi arus kas Anda</p>
         </div>
         <div className="flex gap-2">
-          <button className="bg-forest-card text-white px-4 py-2 rounded-lg text-sm font-medium">
-            Sync Now
+          <button 
+            onClick={handleSync}
+            disabled={isSyncing}
+            className={`bg-forest-card text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isSyncing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-800'}`}
+          >
+            {isSyncing ? 'Syncing...' : 'Sync Now'}
           </button>
         </div>
       </header>
