@@ -1,8 +1,36 @@
+'use client';
+import { useEffect, useState } from 'react';
+import { useDatabase } from '@/providers/DatabaseProvider';
+import { transactionDocType } from '@/lib/db/schema';
 import BalanceCard from '@/components/BalanceCard';
 import CategoryProgressBar from '@/components/CategoryProgressBar';
 import SavingsGoalCard from '@/components/SavingsGoalCard';
 
 export default function Dashboard() {
+  const db = useDatabase();
+  const [totalIncome, setTotalIncome] = useState(0);
+  const [totalExpense, setTotalExpense] = useState(0);
+
+  useEffect(() => {
+    if (!db) return;
+    
+    const sub = db.transactions.find().$.subscribe((docs) => {
+      let inc = 0;
+      let exp = 0;
+      docs.forEach(doc => {
+        const tx = doc.toJSON() as transactionDocType;
+        if (tx.transaction_type === 'income') inc += (tx.amount || 0);
+        else if (tx.transaction_type === 'expense') exp += (tx.amount || 0);
+      });
+      setTotalIncome(inc);
+      setTotalExpense(exp);
+    });
+
+    return () => sub.unsubscribe();
+  }, [db]);
+
+  const activeBalance = totalIncome - totalExpense;
+
   return (
     <div className="min-h-screen bg-cream-bg dark:bg-forest-bg p-4 md:p-8">
       <header className="mb-8 flex justify-between items-center">
@@ -11,7 +39,6 @@ export default function Dashboard() {
           <p className="text-cream-textSecondary dark:text-forest-textSecondary text-sm mt-1">Ringkasan kondisi arus kas Anda</p>
         </div>
         <div className="flex gap-2">
-          {/* We will add Sync / Settings buttons here later */}
           <button className="bg-forest-card text-white px-4 py-2 rounded-lg text-sm font-medium">
             Sync Now
           </button>
@@ -22,9 +49,9 @@ export default function Dashboard() {
         {/* Kolom Kiri: Saldo & Habit Plant */}
         <div className="md:col-span-8 flex flex-col gap-6">
           <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <BalanceCard title="Saldo Aktif" balance={12500000} type="neutral" />
-            <BalanceCard title="Pemasukan" balance={15000000} type="income" />
-            <BalanceCard title="Pengeluaran" balance={2500000} type="expense" />
+            <BalanceCard title="Saldo Aktif" balance={activeBalance} type="neutral" />
+            <BalanceCard title="Pemasukan" balance={totalIncome} type="income" />
+            <BalanceCard title="Pengeluaran" balance={totalExpense} type="expense" />
           </section>
 
           {/* Placeholder untuk Donut Chart & Daftar Transaksi Terbaru */}

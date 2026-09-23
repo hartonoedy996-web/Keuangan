@@ -5,6 +5,8 @@ import Link from 'next/link';
 
 const inter = Inter({ subsets: ["latin"] });
 
+import { DatabaseProvider } from '@/providers/DatabaseProvider';
+
 export const metadata: Metadata = {
   title: "Smart Money Manager",
   description: "Aplikasi catatan keuangan pintar dengan AI",
@@ -18,7 +20,8 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body className={inter.className}>
-        <div className="flex min-h-screen bg-cream-bg dark:bg-forest-bg">
+        <DatabaseProvider>
+          <div className="flex min-h-screen bg-cream-bg dark:bg-forest-bg">
           {/* Sidebar Sederhana */}
           <aside className="w-64 bg-cream-card dark:bg-forest-card border-r border-gray-100 dark:border-gray-800 hidden md:flex flex-col p-6 shadow-soft">
             <div className="text-xl font-bold text-forest-bg dark:text-cream-bg mb-10 tracking-tight">
@@ -64,6 +67,7 @@ export default function RootLayout({
             {children}
           </main>
         </div>
+        </DatabaseProvider>
       </body>
     </html>
   );
