@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-color: #FDFBF7;
+    --text-color: #2C2924;
+  }
+  
+  .dark {
+    --bg-color: #072A24;
+    --text-color: #FFFFFF;
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+  }
+}
