@@ -1,10 +1,13 @@
 import { Stack } from 'expo-router';
 import '../../global.css';
+import { DatabaseProvider } from '../providers/DatabaseProvider';
 
 export default function RootLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
+    <DatabaseProvider>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+    </DatabaseProvider>
   );
 }
